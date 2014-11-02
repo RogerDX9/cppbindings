@@ -4,114 +4,167 @@
 #include <string>
 #include <map>
 #include <assert.h>
-#include <type_traits>
 #include <vector>
 
 enum EType
 {
-	NotImplemented,
-	Float,
-	Int,
-	String,
-	Class,
-	Array,
+	ENotImplemented,
+	EFloat,
+	EInt,
+	EString,
+	EClass,
+	EArray,
 };
 
 //------------------------------------------------------------
-struct IType
+struct ITypeInfo
 {
+protected:
 	std::string m_name;
-
-	IType(const std::string & inName)
+public:
+	ITypeInfo(const std::string & inName)
 		: m_name(inName)
 	{
 	}
 
-	virtual EType getType() { return NotImplemented; }
-	virtual bool isPointer() { return false; }
-	virtual IType* getElementType() { return NULL; }
-	virtual IType* getMember(const std::string & memberName) { return NULL; }
+	virtual ~ITypeInfo() {}
+
+	virtual EType getType() const { return ENotImplemented; }
+	virtual bool isPointer() const { return false; }
+
+	virtual bool isMember() const { return false; }
+	virtual const char* getMemberName() const { return NULL; }
+	virtual const char* getName() const { return m_name.c_str(); }
+	virtual const std::vector<ITypeInfo*>* getMembers() const { return NULL; }
+
+	virtual const ITypeInfo* getElementType() const { return NULL; }
+	virtual const size_t getArrayCount(const void* instance) const { return 0; }
+	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const { return NULL; }
+
+	virtual const void* getValuePtr(const void* instance) const { return instance; }
+	virtual void setValuePtr(const void* instance, const void* value) const { assert(true); }
+
+	template<typename T>
+	void setValue(const void* instance, const T & inValue) const
+	{
+		const void* val = &inValue;
+		setValuePtr(instance, val);
+	}
+
+	template<typename T>
+	const T & getValue(const void* instance) const
+	{
+		const T* val = (T*)getValuePtr(instance);
+		return *val;
+	}
 };
 
 //------------------------------------------------------------
 template<typename T>
-struct Type : public IType
+struct TypeInfo : public ITypeInfo
 {
 };
 
 //------------------------------------------------------------
 template<typename T>
-struct IntType: public IType
+struct IntType: public ITypeInfo
 {
 	IntType(const std::string & inName)
-		: IType(inName)
+		: ITypeInfo(inName)
 	{
 	}
 
-	virtual EType getType()
+	virtual EType getType() const
 	{
-		return Int;
-	}
-};
-
-//------------------------------------------------------------
-template<typename T>
-struct ArrayType: public IType
-{
-	ArrayType(const std::string & inName)
-		: IType(inName)
-	{
+		return EInt;
 	}
 
-	virtual EType getType()
+	virtual void setValuePtr(const void* instance, const void* value) const
 	{
-		return Array;
+		int * vPtr = (int*)value;
+		int * iPtr = (int*)instance;
+		*iPtr = *vPtr;
 	}
-};
-
-//------------------------------------------------------------
-template<typename T>
-struct Type <std::vector<T>>: public ArrayType<std::vector<T>>
-{
-	Type<T> m_elementType;
-	Type(): ArrayType<std::vector<T>>("std::vector") {}
-
-	virtual IType* getElementType() { return &m_elementType; }
 };
 
 //------------------------------------------------------------
 template<>
-struct Type <int>: public IntType<int>
+struct TypeInfo <int>: public IntType<int>
 {
-	Type(): IntType<int>("int") {}
+	TypeInfo(): IntType<int>("int") {}
+};
+
+//------------------------------------------------------------
+template<typename T>
+struct ArrayType: public ITypeInfo
+{
+	ArrayType(const std::string & inName)
+		: ITypeInfo(inName)
+	{
+	}
+
+	virtual EType getType() const
+	{
+		return EArray;
+	}
+};
+
+//------------------------------------------------------------
+// template specialization for std::vector
+template<typename T>
+struct TypeInfo <std::vector<T>>: public ArrayType<std::vector<T>>
+{
+private:
+	TypeInfo<T> m_elementType;
+public:
+	TypeInfo(): ArrayType<std::vector<T>>("std::vector") {}
+
+	virtual const ITypeInfo* getElementType() const { return &m_elementType; }
+
+	virtual const size_t getArrayCount(const void* instance) const 
+	{
+		const std::vector<T>* array = (const std::vector<T>*)instance;
+		return array->size();
+	}
+	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
+	{
+		const std::vector<T>* array = (const std::vector<T>*)instance;
+		const void* value = &array->at(inIndex);
+		return value;
+	}
 };
 
 //------------------------------------------------------------
 template<typename T, class U, typename TType>
-struct MemberBinding: public Type<TType>
+struct MemberBinding: public TypeInfo<TType>
 {
+protected:
+	std::string		m_memberName;
 	T U::*			m_pMember;
-
-	void setMember(T U::* pMember)
-	{
-		m_pMember = pMember;
-	}
 
 public:
 
-	void setValue(U & instance, const T & value)
+	MemberBinding(const std::string& inName, T U::* pMember)
+		: TypeInfo<TType>()
+		, m_memberName(inName)
+		, m_pMember(pMember)
 	{
-		instance.*m_pMember = value;
 	}
 
-	const T& getValue(const U & instance)
+	virtual bool isMember() const { return true; }
+
+	virtual const char* getMemberName() const { return m_memberName.c_str(); }
+
+	virtual const void* getValuePtr(const void* instance) const
 	{
-		return instance.*m_pMember;
+		U * iPtr = (U*)instance;
+		return &(iPtr->*m_pMember);
 	}
 
-	void default(const T& inValue)
+	virtual void setValuePtr(const void* instance, const void* value) const
 	{
-		*m_pMember = inValue;
+		T * vPtr = (T*)value;
+		((U*)instance)->*m_pMember = *vPtr;
 	}
 };
 
@@ -119,66 +172,71 @@ public:
 template<typename T, class U, typename TType>
 struct MemberPointerBinding: public MemberBinding<T, U, TType>
 {
-	virtual bool isPointer() { return true; }
+	MemberPointerBinding(const std::string& inName, T U::* pMember)
+		: MemberBinding<T, U, TType>(inName, pMember)
+	{
+	}
+
+	virtual bool isPointer() const { return true; }
+
+	virtual const void* getValuePtr(const void* instance) const
+	{
+		return ((U*)instance)->*m_pMember;
+	}
 };
 
 
 //------------------------------------------------------------
-struct IClassType: public IType
+struct IClassType: public ITypeInfo
 {
 private:
-	std::map<std::string, IType*> m_members;
+	std::vector<ITypeInfo*> m_members;
 
 public:
 	IClassType(const std::string & inName)
-		: IType(inName)
+		: ITypeInfo(inName)
 	{
+	}
+
+	~IClassType()
+	{
+		for (std::vector<ITypeInfo*>::const_iterator it = m_members.begin(); it != m_members.end(); ++it)
+		{
+			delete (*it);
+		}
 	}
 
 	template<typename T, class U>
 	MemberBinding<T, U, T>* bind(const std::string & inName, T U::* inValue)
 	{
-		MemberBinding<T, U, T>* vb = new MemberBinding<T, U, T>();
-		vb->setMember(inValue);
-		m_members[inName] = vb;
+		MemberBinding<T, U, T>* vb = new MemberBinding<T, U, T>(inName, inValue);
+		m_members.push_back(vb);
 		return vb;
 	}
 
 	template<typename T, class U>
 	MemberBinding<T*, U, T>* bind(const std::string & inName, T* U::* inValue)
 	{
-		MemberBinding<T*, U, T>* vb = new MemberPointerBinding<T*, U, T>();
-		vb->setMember(inValue);
-		m_members[inName] = vb;
+		MemberBinding<T*, U, T>* vb = new MemberPointerBinding<T*, U, T>(inName, inValue);
+		m_members.push_back(vb);
 		return vb;
 	}
 
-	virtual IType* getMember(const std::string & memberName)
+	virtual EType getType() const
 	{
-		assert(m_members.find(memberName) != m_members.end());
-		return m_members[memberName];
+		return EClass;
 	}
 
-	template<typename T, class U>
-	void setValue(const std::string & memberName, U & instance, const T & inValue)
-	{
-		MemberBinding<T, U, T>* vb = static_cast<MemberBinding<T, U, T>*>(getMember(memberName));
-		vb->setValue(instance, inValue);
-	}
+	virtual const std::vector<ITypeInfo*>* getMembers() const { return &m_members; }
 };
 
 //------------------------------------------------------------
 template<typename T>
 struct ClassType: public IClassType
 {
-	ClassType(const std::string & inName)
-		: IClassType(inName)
+	ClassType()	: IClassType("")
 	{
-		T::bindReflection(this);
-	}
-	virtual EType getType()
-	{
-		return Class;
+		m_name = T::bindReflection(this);
 	}
 };
 
