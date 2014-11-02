@@ -7,26 +7,31 @@
 
 class Car
 {
-	Wheel m_wheel;
-	Wheel* m_pWheel;
-	std::vector<int> m_gears;
+	int					m_speed;
+	Wheel*				m_wheelPtr;
+	Wheel				m_wheel;
+	std::vector<Wheel>	m_wheels;
 
 public:
-	int m_speed;
 
-	static void bindReflection(IClassType * inReflection)
+	Car()
 	{
-		inReflection->bind("m_speed", &Car::m_speed);
-		inReflection->bind("m_wheel", &Car::m_wheel);
-		inReflection->bind("m_pWheel", &Car::m_pWheel);
-		inReflection->bind("m_gears", &Car::m_gears);
+		m_speed = 1;
+		m_wheelPtr = NULL;
+		m_wheels.push_back(Wheel());
+	}
+
+	static std::string bindReflection(IClassType * inReflection)
+	{
+		inReflection->bind("m_speed",		&Car::m_speed);
+		inReflection->bind("m_wheelPtr",	&Car::m_wheelPtr);
+		inReflection->bind("m_wheel",		&Car::m_wheel);
+		inReflection->bind("m_wheels",		&Car::m_wheels);
+
+		return "Car";
 	}
 };
 
-template<>
-struct Type <Car>: public ClassType<Car>
-{
-	Type(): ClassType<Car>("Car") {}
-};
+template<> struct TypeInfo <Car>: public ClassType<Car> {};
 
 #endif
