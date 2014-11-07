@@ -1,16 +1,38 @@
+/*Copyright (C) 2014 Dmytro Shchukin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.*/
+
 #ifndef REFLECTION_H
 #define REFLECTION_H
 
 #include <string>
-#include <map>
 #include <assert.h>
 #include <vector>
 
 enum EType
 {
 	ENotImplemented,
-	EFloat,
+	EBool,
 	EInt,
+	EUInt,
+	EFloat,
+	EDouble,
 	EString,
 	EClass,
 	EArray,
@@ -32,14 +54,17 @@ public:
 	virtual EType getType() const { return ENotImplemented; }
 	virtual bool isPointer() const { return false; }
 
+	// Class
 	virtual bool isMember() const { return false; }
 	virtual const char* getMemberName() const { return NULL; }
 	virtual const char* getName() const { return m_name.c_str(); }
 	virtual const std::vector<ITypeInfo*>* getMembers() const { return NULL; }
 
+	// Array
 	virtual const ITypeInfo* getElementType() const { return NULL; }
 	virtual const size_t getArrayCount(const void* instance) const { return 0; }
 	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const { return NULL; }
+	virtual void arrayResize(const void* instance, size_t n) const {}
 
 	virtual const void* getValuePtr(const void* instance) const { return instance; }
 	virtual void setValuePtr(const void* instance, const void* value) const { assert(true); }
@@ -67,31 +92,79 @@ struct TypeInfo : public ITypeInfo
 
 //------------------------------------------------------------
 template<typename T>
-struct IntType: public ITypeInfo
+struct PrimitiveType: public ITypeInfo
 {
-	IntType(const std::string & inName)
+	PrimitiveType(const std::string & inName)
 		: ITypeInfo(inName)
 	{
 	}
 
-	virtual EType getType() const
-	{
-		return EInt;
-	}
-
 	virtual void setValuePtr(const void* instance, const void* value) const
 	{
-		int * vPtr = (int*)value;
-		int * iPtr = (int*)instance;
+		T * vPtr = (T*)value;
+		T * iPtr = (T*)instance;
 		*iPtr = *vPtr;
 	}
 };
 
 //------------------------------------------------------------
 template<>
-struct TypeInfo <int>: public IntType<int>
+struct TypeInfo <bool>: public PrimitiveType<bool>
 {
-	TypeInfo(): IntType<int>("int") {}
+	TypeInfo(): PrimitiveType<bool>("bool") {}
+
+	virtual EType getType() const
+	{
+		return EBool;
+	}
+};
+
+//------------------------------------------------------------
+template<>
+struct TypeInfo <int>: public PrimitiveType<int>
+{
+	TypeInfo(): PrimitiveType<int>("int") {}
+
+	virtual EType getType() const
+	{
+		return EInt;
+	}
+};
+
+//------------------------------------------------------------
+template<>
+struct TypeInfo <unsigned>: public PrimitiveType<unsigned>
+{
+	TypeInfo(): PrimitiveType<unsigned>("unsigned") {}
+
+	virtual EType getType() const
+	{
+		return EUInt;
+	}
+};
+
+//------------------------------------------------------------
+template<>
+struct TypeInfo <float>: public PrimitiveType<float>
+{
+	TypeInfo(): PrimitiveType<float>("float") {}
+
+	virtual EType getType() const
+	{
+		return EFloat;
+	}
+};
+
+//------------------------------------------------------------
+template<>
+struct TypeInfo <double>: public PrimitiveType<double>
+{
+	TypeInfo(): PrimitiveType<double>("double") {}
+
+	virtual EType getType() const
+	{
+		return EDouble;
+	}
 };
 
 //------------------------------------------------------------
@@ -131,6 +204,11 @@ public:
 		const std::vector<T>* array = (const std::vector<T>*)instance;
 		const void* value = &array->at(inIndex);
 		return value;
+	}
+	virtual void arrayResize(const void* instance, size_t n) const
+	{
+		std::vector<T>* array = (std::vector<T>*)instance;
+		array->resize(n);
 	}
 };
 
