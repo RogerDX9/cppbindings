@@ -56,7 +56,7 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, Writer<Strin
 	{
 		inWriter.Double(inType->getValue<double>(inInstance));
 	}
-    else if (inType->getType() == EClass)
+	else if (inType->getType() == EClass)
 	{
 		const void* instance = inType->getValuePtr(inInstance);
 
@@ -115,7 +115,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	car.m_wheels.push_back(car.m_wheel);
 
 	StringBuffer s;
-    Writer<StringBuffer> writer(s);
+	Writer<StringBuffer> writer(s);
 	serializeJSON(car, writer);
 	std::cout << s.GetString() << std::endl;
 
