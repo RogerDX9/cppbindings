@@ -105,7 +105,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			{\"m_rotation\":3,\"m_screws\":[1,2]},\
 			{\"m_rotation\":4,\"m_screws\":[1,2,3,4,4,4,6,7]}\
 			]}";
-    d.Parse(newObj);
+	d.Parse(newObj);
 
 	Car car;
 	deserializeJSON(car, d);
