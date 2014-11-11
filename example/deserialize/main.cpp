@@ -87,7 +87,11 @@ void deserializeJSON(T& outObject, Value& inValue)
 	deserializeJSON(&type, &outObject, inValue);
 }
 
+#ifdef _MSC_VER
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main()
+#endif
 {
 	Document d;
 	const char * newObj = 
