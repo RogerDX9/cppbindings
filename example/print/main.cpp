@@ -18,10 +18,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
-//MSVS
-#include "stdafx.h"
+#ifdef _MSC_VER
+#include "..\..\build\vs2012\stdafx.h"
+#endif
 
-#include "Reflection.h"
 #include "..\Car.h"
 #include "..\Wheel.h"
 
