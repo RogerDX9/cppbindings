@@ -18,10 +18,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
-//MSVS
+#ifdef _MSC_VER
 #include "stdafx.h"
+#endif
 
-#include "Reflection.h"
 #include "..\Car.h"
 #include "..\Wheel.h"
 
@@ -31,6 +31,8 @@ THE SOFTWARE.*/
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+
+#include "Reflection.h"
 
 using namespace rapidjson;
 using namespace std;
