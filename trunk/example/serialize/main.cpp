@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
 #ifdef _MSC_VER
-#include "stdafx.h"
+#include "..\..\build\vs2012\stdafx.h"
 #endif
 
 #include "..\Car.h"
@@ -27,12 +27,7 @@ THE SOFTWARE.*/
 
 #include <iostream>
 
-#include "rapidjson/rapidjson.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
-
-#include "Reflection.h"
+#include "..\..\rapidjson\writer.h"
 
 using namespace rapidjson;
 using namespace std;
