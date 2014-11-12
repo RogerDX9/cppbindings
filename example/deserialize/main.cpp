@@ -24,6 +24,7 @@ THE SOFTWARE.*/
 
 #include "..\Car.h"
 #include "..\Wheel.h"
+#include "..\Tools.h"
 
 #include "..\..\rapidjson\document.h"
 
@@ -110,6 +111,8 @@ int main()
 
 	Car car;
 	deserializeJSON(car, d);
+
+	printHierarchy(car);
 
 	return 0;
 }
