@@ -25,6 +25,8 @@ THE SOFTWARE.*/
 #include "..\Car.h"
 #include "..\Wheel.h"
 
+#include <cstdio>
+
 void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsCount)
 {
 	for (int idx = 0; idx < inTabsCount; ++idx)
@@ -111,7 +113,11 @@ void printHierarchy(T& inObject)
 	printHierarchy(&type, &inObject, 0);
 }
 
+#ifdef _MSC_VER
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main()
+#endif
 {
 	Car car;
 	car.m_speed = 1;
