@@ -185,12 +185,12 @@ struct ArrayType: public ITypeInfo
 //------------------------------------------------------------
 // template specialization for std::vector
 template<typename T>
-struct TypeInfo <std::vector<T>>: public ArrayType<std::vector<T>>
+struct TypeInfo < std::vector<T> >: public ArrayType< std::vector<T> >
 {
 private:
 	TypeInfo<T> m_elementType;
 public:
-	TypeInfo(): ArrayType<std::vector<T>>("std::vector") {}
+	TypeInfo(): ArrayType< std::vector<T> >("std::vector") {}
 
 	virtual const ITypeInfo* getElementType() const { return &m_elementType; }
 
@@ -242,7 +242,8 @@ public:
 	virtual void setValuePtr(const void* instance, const void* value) const
 	{
 		T * vPtr = (T*)value;
-		((U*)instance)->*m_pMember = *vPtr;
+		U * iPtr = (U*)instance;
+		iPtr->*m_pMember = *vPtr;
 	}
 };
 
@@ -259,7 +260,9 @@ struct MemberPointerBinding: public MemberBinding<T, U, TType>
 
 	virtual const void* getValuePtr(const void* instance) const
 	{
-		return ((U*)instance)->*m_pMember;
+		U * iPtr = (U*)instance;
+		T U::* mPtr = this->m_pMember;
+		return iPtr->*mPtr;
 	}
 };
 
