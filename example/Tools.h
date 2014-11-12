@@ -2,6 +2,7 @@
 #define TOOLS_H
 
 #include "..\cppbindings\reflection.h"
+#include <cstdio>
 
 void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsCount)
 {
