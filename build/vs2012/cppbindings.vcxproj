@@ -80,6 +80,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\cppbindings\reflection.h" />
     <ClInclude Include="..\..\example\Car.h" />
     <ClInclude Include="..\..\example\Tools.h" />
     <ClInclude Include="..\..\example\Wheel.h" />
