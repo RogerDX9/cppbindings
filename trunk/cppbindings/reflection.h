@@ -85,12 +85,14 @@ public:
 };
 
 //------------------------------------------------------------
+// main tamplate
 template<typename T>
 struct TypeInfo : public ITypeInfo
 {
 };
 
 //------------------------------------------------------------
+// base class for build-in types
 template<typename T>
 struct PrimitiveType: public ITypeInfo
 {
@@ -108,6 +110,7 @@ struct PrimitiveType: public ITypeInfo
 };
 
 //------------------------------------------------------------
+// template specialization for bool
 template<>
 struct TypeInfo <bool>: public PrimitiveType<bool>
 {
@@ -120,6 +123,7 @@ struct TypeInfo <bool>: public PrimitiveType<bool>
 };
 
 //------------------------------------------------------------
+// template specialization for int
 template<>
 struct TypeInfo <int>: public PrimitiveType<int>
 {
@@ -132,6 +136,7 @@ struct TypeInfo <int>: public PrimitiveType<int>
 };
 
 //------------------------------------------------------------
+// template specialization for unsigned
 template<>
 struct TypeInfo <unsigned>: public PrimitiveType<unsigned>
 {
@@ -144,6 +149,7 @@ struct TypeInfo <unsigned>: public PrimitiveType<unsigned>
 };
 
 //------------------------------------------------------------
+// template specialization for float
 template<>
 struct TypeInfo <float>: public PrimitiveType<float>
 {
@@ -156,6 +162,7 @@ struct TypeInfo <float>: public PrimitiveType<float>
 };
 
 //------------------------------------------------------------
+// template specialization for double
 template<>
 struct TypeInfo <double>: public PrimitiveType<double>
 {
@@ -168,6 +175,7 @@ struct TypeInfo <double>: public PrimitiveType<double>
 };
 
 //------------------------------------------------------------
+// base class for arrays
 template<typename T>
 struct ArrayType: public ITypeInfo
 {
@@ -213,8 +221,9 @@ public:
 };
 
 //------------------------------------------------------------
+// TType is the same T, it's done to differentiate pointer from regular value
 template<typename T, class U, typename TType>
-struct MemberBinding: public TypeInfo<TType>
+struct MemberInfo: public TypeInfo<TType>
 {
 protected:
 	std::string		m_memberName;
@@ -222,7 +231,7 @@ protected:
 
 public:
 
-	MemberBinding(const std::string& inName, T U::* pMember)
+	MemberInfo(const std::string& inName, T U::* pMember)
 		: TypeInfo<TType>()
 		, m_memberName(inName)
 		, m_pMember(pMember)
@@ -249,10 +258,10 @@ public:
 
 //------------------------------------------------------------
 template<typename T, class U, typename TType>
-struct MemberPointerBinding: public MemberBinding<T, U, TType>
+struct MemberPointerInfo: public MemberInfo<T, U, TType>
 {
-	MemberPointerBinding(const std::string& inName, T U::* pMember)
-		: MemberBinding<T, U, TType>(inName, pMember)
+	MemberPointerInfo(const std::string& inName, T U::* pMember)
+		: MemberInfo<T, U, TType>(inName, pMember)
 	{
 	}
 
@@ -266,8 +275,8 @@ struct MemberPointerBinding: public MemberBinding<T, U, TType>
 	}
 };
 
-
 //------------------------------------------------------------
+// base for all class template specialization
 struct IClassType: public ITypeInfo
 {
 private:
@@ -288,17 +297,17 @@ public:
 	}
 
 	template<typename T, class U>
-	MemberBinding<T, U, T>* bind(const std::string & inName, T U::* inValue)
+	MemberInfo<T, U, T>* bind(const std::string & inName, T U::* inValue)
 	{
-		MemberBinding<T, U, T>* vb = new MemberBinding<T, U, T>(inName, inValue);
+		MemberInfo<T, U, T>* vb = new MemberInfo<T, U, T>(inName, inValue);
 		m_members.push_back(vb);
 		return vb;
 	}
 
 	template<typename T, class U>
-	MemberBinding<T*, U, T>* bind(const std::string & inName, T* U::* inValue)
+	MemberInfo<T*, U, T>* bind(const std::string & inName, T* U::* inValue)
 	{
-		MemberBinding<T*, U, T>* vb = new MemberPointerBinding<T*, U, T>(inName, inValue);
+		MemberInfo<T*, U, T>* vb = new MemberPointerInfo<T*, U, T>(inName, inValue);
 		m_members.push_back(vb);
 		return vb;
 	}
