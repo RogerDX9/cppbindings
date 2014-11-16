@@ -26,7 +26,7 @@ THE SOFTWARE.*/
 #include "..\Wheel.h"
 #include "..\Tools.h"
 
-#include "..\..\rapidjson\document.h"
+#include "..\..\rapidjson\include\rapidjson\document.h"
 
 using namespace rapidjson;
 using namespace std;

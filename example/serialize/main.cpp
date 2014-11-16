@@ -27,7 +27,7 @@ THE SOFTWARE.*/
 
 #include <iostream>
 
-#include "..\..\rapidjson\writer.h"
+#include "..\..\rapidjson\include\rapidjson\writer.h"
 
 using namespace rapidjson;
 using namespace std;
@@ -97,7 +97,11 @@ void serializeJSON(T& outObject, Writer<StringBuffer>& inWriter)
 	serializeJSON(&type, &outObject, inWriter);
 }
 
+#ifdef _MSC_VER
 int _tmain(int argc, _TCHAR* argv[])
+#else
+int main()
+#endif
 {
 	Car car;
 	car.m_speed = 1;
