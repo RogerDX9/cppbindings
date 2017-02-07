@@ -5,6 +5,9 @@
 #include "Wheel.h"
 #include <vector>
 
+// 
+template<> TypeInfo<std::vector<Wheel>> STDVectorType<Wheel>::btype;
+
 struct Car
 {
 	bool				m_automaticTransmission;
@@ -29,6 +32,6 @@ struct Car
 	}
 };
 
-// Tamplate specification for Car
+// Car Type Tamplate Specification
 template<> struct TypeInfo <Car>: public ClassType<Car> {};
 #endif

@@ -36,7 +36,11 @@ enum EType
 	EString,
 	EClass,
 	EArray,
+	EPointer
 };
+
+//------------------------------------------------------------
+struct IMember;
 
 //------------------------------------------------------------
 struct ITypeInfo
@@ -89,6 +93,7 @@ public:
 template<typename T>
 struct TypeInfo : public ITypeInfo
 {
+	static TypeInfo<T> btype;
 };
 
 //------------------------------------------------------------
@@ -96,6 +101,8 @@ struct TypeInfo : public ITypeInfo
 template<typename T>
 struct PrimitiveType: public ITypeInfo
 {
+	static TypeInfo<T> btype;
+
 	PrimitiveType(const std::string & inName)
 		: ITypeInfo(inName)
 	{
@@ -174,11 +181,16 @@ struct TypeInfo <double>: public PrimitiveType<double>
 	}
 };
 
+template<typename T>
+TypeInfo<T> PrimitiveType<T>::btype;
+
 //------------------------------------------------------------
 // base class for arrays
 template<typename T>
 struct ArrayType: public ITypeInfo
 {
+	static TypeInfo<T> btype;
+
 	ArrayType(const std::string & inName)
 		: ITypeInfo(inName)
 	{
@@ -190,40 +202,142 @@ struct ArrayType: public ITypeInfo
 	}
 };
 
-//------------------------------------------------------------
-// template specialization for std::vector
-template<typename T>
-struct TypeInfo < std::vector<T> >: public ArrayType< std::vector<T> >
+template<typename TElem>
+struct ArrayTypeBase : public ITypeInfo
 {
-private:
-	TypeInfo<T> m_elementType;
-public:
-	TypeInfo(): ArrayType< std::vector<T> >("std::vector") {}
-
-	virtual const ITypeInfo* getElementType() const { return &m_elementType; }
-
-	virtual const size_t getArrayCount(const void* instance) const 
+	ArrayTypeBase(const std::string & inName)
+		: ITypeInfo(inName)
+		, m_elementType(&TypeInfo<TElem>::btype)
 	{
-		const std::vector<T>* array = (const std::vector<T>*)instance;
+	}
+
+	virtual EType getType() const
+	{
+		return EArray;
+	}
+
+	virtual const ITypeInfo* getElementType() const 
+	{ 
+		return m_elementType;
+	}
+private:
+	const ITypeInfo* m_elementType;
+};
+
+template<typename TElem>
+struct STDVectorType : public ArrayTypeBase<TElem>
+{
+	STDVectorType(const std::string & inName)
+		: ArrayTypeBase<TElem>(inName)
+	{
+	}
+
+	static TypeInfo<std::vector<TElem>> btype;
+
+	virtual const size_t getArrayCount(const void* instance) const
+	{
+		const std::vector<TElem>* array = (const std::vector<TElem>*)instance;
 		return array->size();
 	}
+
 	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
 	{
-		const std::vector<T>* array = (const std::vector<T>*)instance;
+		const std::vector<TElem>* array = (const std::vector<TElem>*)instance;
 		const void* value = &array->at(inIndex);
 		return value;
 	}
 	virtual void arrayResize(const void* instance, size_t n) const
 	{
-		std::vector<T>* array = (std::vector<T>*)instance;
+		std::vector<TElem>* array = (std::vector<TElem>*)instance;
 		array->resize(n);
 	}
 };
 
 //------------------------------------------------------------
+// template specialization for std::vector
+template<typename TElem>
+struct TypeInfo < std::vector<TElem> >: public STDVectorType<TElem>
+{
+	TypeInfo(): STDVectorType< TElem >("std::vector") {}
+};
+
+//template<>
+//TypeInfo<std::vector<int>> ArrayType<std::vector<int>>::btype;
+
+//------------------------------------------------------------
+// template specialization for std::vector<int>
+//template<>
+//struct TypeInfo < std::vector<int> > : public ArrayType< std::vector<int> >
+//{
+//	TypeInfo() : ArrayType< std::vector<int> >("std::vector<int>") {}
+//
+//	virtual const ITypeInfo* getElementType() const { return &TypeInfo<int>::btype; }
+//
+//	virtual const size_t getArrayCount(const void* instance) const
+//	{
+//		const std::vector<int>* array = (const std::vector<int>*)instance;
+//		return array->size();
+//	}
+//	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
+//	{
+//		const std::vector<int>* array = (const std::vector<int>*)instance;
+//		const void* value = &array->at(inIndex);
+//		return value;
+//	}
+//	virtual void arrayResize(const void* instance, size_t n) const
+//	{
+//		std::vector<int>* array = (std::vector<int>*)instance;
+//		array->resize(n);
+//	}
+//};
+
+//------------------------------------------------------------
+// base class for pointers
+//template<class T*>
+//struct PointerType : public ITypeInfo
+//{
+//	static TypeInfo<T> btype;
+//
+//	PointerType()
+//		: ITypeInfo("pointer")
+//	{
+//	}
+//
+//	virtual EType getType() const
+//	{
+//		return EPointer;
+//	}
+//};
+//
+//template<typename T>
+//TypeInfo<T> PointerType<T>::btype;
+
+//------------------------------------------------------------
+struct IMember : public ITypeInfo
+{
+	IMember(const ITypeInfo* inType) 
+		: ITypeInfo(inType->getName())
+		, m_type(inType) 
+	{}
+
+	virtual bool isPointer() const { return m_type->isPointer(); }
+	virtual EType getType() const { return m_type->getType(); }
+	virtual const std::vector<ITypeInfo*>* getMembers() const { return m_type->getMembers(); }
+
+	// Array
+	virtual const ITypeInfo* getElementType() const { return m_type->getElementType(); }
+	virtual const size_t getArrayCount(const void* instance) const { return m_type->getArrayCount(instance); }
+	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const { return m_type->getArrayValuePtr(instance, inIndex); }
+	virtual void arrayResize(const void* instance, size_t n) const { m_type->arrayResize(instance, n); }
+
+private:
+	const ITypeInfo* m_type;
+};
+
+//------------------------------------------------------------
 // TType is the same T, it's done to differentiate pointer from regular value
 template<typename T, class U, typename TType>
-struct MemberInfo: public TypeInfo<TType>
+struct MemberInfo: public IMember
 {
 protected:
 	std::string		m_memberName;
@@ -232,7 +346,7 @@ protected:
 public:
 
 	MemberInfo(const std::string& inName, T U::* pMember)
-		: TypeInfo<TType>()
+		: IMember(&TypeInfo<TType>::btype)
 		, m_memberName(inName)
 		, m_pMember(pMember)
 	{
@@ -324,10 +438,29 @@ public:
 template<typename T>
 struct ClassType: public IClassType
 {
+	static TypeInfo<T> btype;
+
 	ClassType()	: IClassType("")
 	{
 		m_name = T::bindReflection(this);
 	}
 };
+
+template<typename T>
+TypeInfo<T> ClassType<T>::btype;
+
+template<>
+TypeInfo<std::vector<int>> STDVectorType<int>::btype;
+
+//template<typename T>
+//TypeInfo<std::vector<T>> STDVectorTypeBase<T>::btype;
+
+
+
+//template<typename T>
+//TypeInfo<T> ArrayType<T>::btype;
+
+//template<typename T>
+//TypeInfo<T> PrimitiveType<T>::btype;
 
 #endif

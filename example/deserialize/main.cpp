@@ -31,6 +31,7 @@ THE SOFTWARE.*/
 using namespace rapidjson;
 using namespace std;
 
+
 void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inValue)
 {
 	if (inType->getType() == EBool)
@@ -57,11 +58,12 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inV
 			const std::vector<ITypeInfo*>* members = inType->getMembers();
 			for (std::vector<ITypeInfo*>::const_iterator it = members->begin(); it != members->end(); ++it)
 			{
-				const char* memberName = (*it)->getMemberName();
+				const ITypeInfo* m = (*it);
+				const char* memberName = m->getMemberName();
 				if (inValue.HasMember(memberName))
 				{
 					Value& v = inValue[memberName];
-					deserializeJSON(*it, instance, v);
+					deserializeJSON(m, instance, v);
 				}
 			}
 		}
@@ -84,8 +86,7 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inV
 template<class T>
 void deserializeJSON(T& outObject, Value& inValue)
 {
-	TypeInfo<T> type;
-	deserializeJSON(&type, &outObject, inValue);
+	deserializeJSON(&ClassType<T>::btype, &outObject, inValue);
 }
 
 #ifdef _MSC_VER
@@ -107,6 +108,15 @@ int main()
 			{\"m_rotation\":3,\"m_screws\":[1,2]},\
 			{\"m_rotation\":4,\"m_screws\":[1,2,3,4,4,4,6,7]}\
 			]}";
+	/*const char * newObj =
+		"{\"m_automaticTransmission\":true,\
+		\"m_speed\":20,\
+		\"m_id\":666,\
+		\"m_mass\":1275.0,\
+		\"m_wheelPtr\":null,\
+		\"m_wheel\":\
+			{\"m_rotation\":2,\"m_screws\":[1,2,3,4]}\
+			}";*/
 	d.Parse(newObj);
 
 	Car car;
