@@ -18,8 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
-#ifndef REFLECTION_H
-#define REFLECTION_H
+#pragma once
 
 #include <string>
 #include <assert.h>
@@ -35,8 +34,12 @@ enum EType
 	EDouble,
 	EString,
 	EClass,
-	EArray,
+	EArray
 };
+
+//------------------------------------------------------------
+struct IMember;
+struct IClassType;
 
 //------------------------------------------------------------
 struct ITypeInfo
@@ -52,13 +55,11 @@ public:
 	virtual ~ITypeInfo() {}
 
 	virtual EType getType() const { return ENotImplemented; }
-	virtual bool isPointer() const { return false; }
+
+	const char* getName() const { return m_name.c_str(); }
 
 	// Class
-	virtual bool isMember() const { return false; }
-	virtual const char* getMemberName() const { return NULL; }
-	virtual const char* getName() const { return m_name.c_str(); }
-	virtual const std::vector<ITypeInfo*>* getMembers() const { return NULL; }
+	virtual const IClassType* getClassType() const { return NULL; }
 
 	// Array
 	virtual const ITypeInfo* getElementType() const { return NULL; }
@@ -89,6 +90,7 @@ public:
 template<typename T>
 struct TypeInfo : public ITypeInfo
 {
+	//static TypeInfo<T> btype;
 };
 
 //------------------------------------------------------------
@@ -96,6 +98,8 @@ struct TypeInfo : public ITypeInfo
 template<typename T>
 struct PrimitiveType: public ITypeInfo
 {
+	static TypeInfo<T> btype;
+
 	PrimitiveType(const std::string & inName)
 		: ITypeInfo(inName)
 	{
@@ -175,72 +179,91 @@ struct TypeInfo <double>: public PrimitiveType<double>
 };
 
 //------------------------------------------------------------
-// base class for arrays
-template<typename T>
-struct ArrayType: public ITypeInfo
+template<typename TContainer>
+struct StdVectorType : public ITypeInfo
 {
-	ArrayType(const std::string & inName)
+	StdVectorType(const std::string & inName)
 		: ITypeInfo(inName)
 	{
+	}
+
+	static TypeInfo<TContainer> btype;
+
+	virtual const size_t getArrayCount(const void* instance) const
+	{
+		const TContainer* array = (const TContainer*)instance;
+		return array->size();
+	}
+
+	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
+	{
+		const TContainer* array = (const TContainer*)instance;
+		const void* value = &array->at(inIndex);
+		return value;
+	}
+	virtual void arrayResize(const void* instance, size_t n) const
+	{
+		TContainer* array = (TContainer*)instance;
+		array->resize(n);
 	}
 
 	virtual EType getType() const
 	{
 		return EArray;
 	}
+
+	virtual const ITypeInfo* getElementType() const
+	{
+		return &TypeInfo<TContainer::value_type>::btype;
+	}
 };
 
 //------------------------------------------------------------
-// template specialization for std::vector
-template<typename T>
-struct TypeInfo < std::vector<T> >: public ArrayType< std::vector<T> >
+template<typename TElem>
+struct TypeInfo<std::vector<TElem>> : public StdVectorType<std::vector<TElem>>
 {
-private:
-	TypeInfo<T> m_elementType;
-public:
-	TypeInfo(): ArrayType< std::vector<T> >("std::vector") {}
-
-	virtual const ITypeInfo* getElementType() const { return &m_elementType; }
-
-	virtual const size_t getArrayCount(const void* instance) const 
+	TypeInfo()	: StdVectorType<std::vector<TElem>>("std::vector")
 	{
-		const std::vector<T>* array = (const std::vector<T>*)instance;
-		return array->size();
-	}
-	virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
-	{
-		const std::vector<T>* array = (const std::vector<T>*)instance;
-		const void* value = &array->at(inIndex);
-		return value;
-	}
-	virtual void arrayResize(const void* instance, size_t n) const
-	{
-		std::vector<T>* array = (std::vector<T>*)instance;
-		array->resize(n);
 	}
 };
 
 //------------------------------------------------------------
-// TType is the same T, it's done to differentiate pointer from regular value
-template<typename T, class U, typename TType>
-struct MemberInfo: public TypeInfo<TType>
+struct IMember
 {
 protected:
-	std::string		m_memberName;
-	T U::*			m_pMember;
+	std::string m_name;
+public:
+	IMember(const std::string& inName, const ITypeInfo* inType)
+		: m_name(inName)
+		, m_type(inType)
+	{}
 
+	const char*			getName() const				{ return m_name.c_str(); }
+	const ITypeInfo*	getTypeInfo() const			{ return m_type; }
+	EType				getType() const				{ return m_type->getType(); }
+	
+	virtual bool		isPointer() const			{ return false; }
+
+	virtual const void* getValuePtr(const void* instance) const = 0;
+	virtual void		setValuePtr(const void* instance, const void* value) const = 0;
+
+private:
+	const ITypeInfo* m_type;
+};
+
+//------------------------------------------------------------
+template<typename T, class U, typename TType>
+struct MemberInfo: public IMember
+{
+protected:
+	T U::* m_pMember;
 public:
 
 	MemberInfo(const std::string& inName, T U::* pMember)
-		: TypeInfo<TType>()
-		, m_memberName(inName)
+		: IMember(inName, &TypeInfo<TType>::btype)
 		, m_pMember(pMember)
 	{
 	}
-
-	virtual bool isMember() const { return true; }
-
-	virtual const char* getMemberName() const { return m_memberName.c_str(); }
 
 	virtual const void* getValuePtr(const void* instance) const
 	{
@@ -258,9 +281,9 @@ public:
 
 //------------------------------------------------------------
 template<typename T, class U, typename TType>
-struct MemberPointerInfo: public MemberInfo<T, U, TType>
+struct MemberInfoPtr: public MemberInfo<T, U, TType>
 {
-	MemberPointerInfo(const std::string& inName, T U::* pMember)
+	MemberInfoPtr(const std::string& inName, T U::* pMember)
 		: MemberInfo<T, U, TType>(inName, pMember)
 	{
 	}
@@ -273,14 +296,19 @@ struct MemberPointerInfo: public MemberInfo<T, U, TType>
 		T U::* mPtr = this->m_pMember;
 		return iPtr->*mPtr;
 	}
+
+	virtual void setValuePtr(const void* instance, const void* value) const
+	{
+		assert(true);
+	}
 };
 
 //------------------------------------------------------------
-// base for all class template specialization
+// base for all class template specializations
 struct IClassType: public ITypeInfo
 {
 private:
-	std::vector<ITypeInfo*> m_members;
+	std::vector<IMember*> m_members;
 
 public:
 	IClassType(const std::string & inName)
@@ -290,11 +318,18 @@ public:
 
 	~IClassType()
 	{
-		for (std::vector<ITypeInfo*>::const_iterator it = m_members.begin(); it != m_members.end(); ++it)
+		for (std::vector<IMember*>::const_iterator it = m_members.begin(); it != m_members.end(); ++it)
 		{
 			delete (*it);
 		}
 	}
+
+	virtual EType getType() const
+	{
+		return EClass;
+	}
+
+	virtual const std::vector<IMember*>* getMembers() const { return &m_members; }
 
 	template<typename T, class U>
 	MemberInfo<T, U, T>* bind(const std::string & inName, T U::* inValue)
@@ -307,27 +342,32 @@ public:
 	template<typename T, class U>
 	MemberInfo<T*, U, T>* bind(const std::string & inName, T* U::* inValue)
 	{
-		MemberInfo<T*, U, T>* vb = new MemberPointerInfo<T*, U, T>(inName, inValue);
+		MemberInfo<T*, U, T>* vb = new MemberInfoPtr<T*, U, T>(inName, inValue);
 		m_members.push_back(vb);
 		return vb;
 	}
-
-	virtual EType getType() const
-	{
-		return EClass;
-	}
-
-	virtual const std::vector<ITypeInfo*>* getMembers() const { return &m_members; }
 };
 
 //------------------------------------------------------------
 template<typename T>
 struct ClassType: public IClassType
 {
+	static TypeInfo<T> btype;
+
 	ClassType()	: IClassType("")
 	{
 		m_name = T::bindReflection(this);
 	}
+
+	virtual const IClassType* getClassType() const { return &btype; }
 };
 
-#endif
+//------------------------------------------------------------
+template<typename T>
+TypeInfo<T> PrimitiveType<T>::btype;
+
+template<typename T>
+TypeInfo<T> StdVectorType<T>::btype;
+
+template<typename T>
+TypeInfo<T> ClassType<T>::btype;

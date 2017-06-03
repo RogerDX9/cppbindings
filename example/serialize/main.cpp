@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
 #ifdef _MSC_VER
-#include "..\..\build\vs2012\stdafx.h"
+#include "..\..\build\vs2015\stdafx.h"
 #endif
 
 #include "..\Car.h"
@@ -29,14 +29,10 @@ THE SOFTWARE.*/
 
 #include "..\..\rapidjson\include\rapidjson\writer.h"
 
-using namespace rapidjson;
 using namespace std;
 
-void serializeJSON(const ITypeInfo* inType, const void* inInstance, Writer<StringBuffer>& inWriter)
+void serializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson::Writer<rapidjson::StringBuffer>& inWriter)
 {
-	if (inType->isMember())
-		inWriter.String(inType->getMemberName());
-
 	if (inType->getType() == EBool)
 	{
 		inWriter.Bool(inType->getValue<bool>(inInstance));
@@ -60,10 +56,19 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, Writer<Strin
 		if (instance != NULL)
 		{
 			inWriter.StartObject();
-			const std::vector<ITypeInfo*>* members = inType->getMembers();
-			for (std::vector<ITypeInfo*>::const_iterator it = members->begin(); it != members->end(); ++it)
+			const IClassType*				classType = inType->getClassType();
+			const std::vector<IMember*>*	members = classType->getMembers();
+
+			for (std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it)
 			{
-				serializeJSON(*it, instance, inWriter);
+				const IMember*		m = (*it);
+				const void*			instance = m->getValuePtr(inInstance);
+				const char*			memberName = m->getName();
+				const ITypeInfo*	memberType = m->getTypeInfo();
+
+				inWriter.String(memberName);
+
+				serializeJSON(memberType, instance, inWriter);
 			}
 			inWriter.EndObject();
 		}
@@ -91,7 +96,7 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, Writer<Strin
 }
 
 template<class T>
-void serializeJSON(T& outObject, Writer<StringBuffer>& inWriter)
+void serializeJSON(T& outObject, rapidjson::Writer<rapidjson::StringBuffer>& inWriter)
 {
 	TypeInfo<T> type;
 	serializeJSON(&type, &outObject, inWriter);
@@ -115,8 +120,8 @@ int main()
 	car.m_wheel.m_screws.push_back(4);
 	car.m_wheels.push_back(car.m_wheel);
 
-	StringBuffer s;
-	Writer<StringBuffer> writer(s);
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
 	serializeJSON(car, writer);
 	std::cout << s.GetString() << std::endl;
 

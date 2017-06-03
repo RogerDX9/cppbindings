@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.*/
 
 #ifdef _MSC_VER
-#include "..\..\build\vs2012\stdafx.h"
+#include "..\..\build\vs2015\stdafx.h"
 #endif
 
 #include "..\Car.h"
@@ -28,10 +28,9 @@ THE SOFTWARE.*/
 
 #include "..\..\rapidjson\include\rapidjson\document.h"
 
-using namespace rapidjson;
 using namespace std;
 
-void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inValue)
+void deserializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson::Value& inValue)
 {
 	if (inType->getType() == EBool)
 	{
@@ -51,30 +50,31 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inV
 	}
 	else if (inType->getType() == EClass)
 	{
-		if (!inType->isPointer())
+		const IClassType*				classType = inType->getClassType();
+		const std::vector<IMember*>*	members   = classType->getMembers();
+		for ( std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it )
 		{
-			const void* instance = inType->getValuePtr(inInstance);
-			const std::vector<ITypeInfo*>* members = inType->getMembers();
-			for (std::vector<ITypeInfo*>::const_iterator it = members->begin(); it != members->end(); ++it)
+			const IMember*		m =				(*it);
+			const void*			instance =		m->getValuePtr(inInstance);
+			const char*			memberName =	m->getName();
+			const ITypeInfo*	memberType =	m->getTypeInfo();
+
+			if (inValue.HasMember(memberName) && !m->isPointer())
 			{
-				const char* memberName = (*it)->getMemberName();
-				if (inValue.HasMember(memberName))
-				{
-					Value& v = inValue[memberName];
-					deserializeJSON(*it, instance, v);
-				}
+				rapidjson::Value& v = inValue[memberName];
+				deserializeJSON(m->getTypeInfo(), instance, v);
 			}
 		}
 	}
 	else if (inType->getType() == EArray)
 	{
-		const void* arrayInstance = inType->getValuePtr(inInstance);
+		const void* arrayInstance = inInstance;
 
 		size_t size = inValue.Size();
 		inType->arrayResize(arrayInstance, size);
 		for (size_t idx = 0; idx < size; ++idx)
 		{
-			Value& v = inValue[idx];
+			rapidjson::Value& v = inValue[idx];
 			const void* valueInstance = inType->getArrayValuePtr(arrayInstance, idx);
 			deserializeJSON(inType->getElementType(), valueInstance, v); 
 		}
@@ -82,10 +82,9 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, Value& inV
 }
 
 template<class T>
-void deserializeJSON(T& outObject, Value& inValue)
+void deserializeJSON(T& outObject, rapidjson::Value& inValue)
 {
-	TypeInfo<T> type;
-	deserializeJSON(&type, &outObject, inValue);
+	deserializeJSON(&TypeInfo<T>::btype, &outObject, inValue);
 }
 
 #ifdef _MSC_VER
@@ -94,8 +93,10 @@ int _tmain(int argc, _TCHAR* argv[])
 int main()
 #endif
 {
-	Document d;
-	const char * newObj = 
+	Car car; // Test
+	rapidjson::Document document;
+
+	const char * jsonStr = 
 		"{\"m_automaticTransmission\":true,\
 		\"m_speed\":20,\
 		\"m_id\":666,\
@@ -107,10 +108,10 @@ int main()
 			{\"m_rotation\":3,\"m_screws\":[1,2]},\
 			{\"m_rotation\":4,\"m_screws\":[1,2,3,4,4,4,6,7]}\
 			]}";
-	d.Parse(newObj);
 
-	Car car;
-	deserializeJSON(car, d);
+	document.Parse(jsonStr);
+
+	deserializeJSON(car, document);
 
 	printHierarchy(car);
 

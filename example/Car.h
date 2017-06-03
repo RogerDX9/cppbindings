@@ -1,5 +1,4 @@
-#ifndef CAR_H
-#define CAR_H
+#pragma once 
 
 #include "..\cppbindings\reflection.h"
 #include "Wheel.h"
@@ -29,6 +28,5 @@ struct Car
 	}
 };
 
-// Tamplate specification for Car
+// Tamplate specification
 template<> struct TypeInfo <Car>: public ClassType<Car> {};
-#endif
