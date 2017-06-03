@@ -1,12 +1,8 @@
-#ifndef CAR_H
-#define CAR_H
+#pragma once 
 
 #include "..\cppbindings\reflection.h"
 #include "Wheel.h"
 #include <vector>
-
-// 
-template<> TypeInfo<std::vector<Wheel>> STDVectorType<Wheel>::btype;
 
 struct Car
 {
@@ -32,6 +28,5 @@ struct Car
 	}
 };
 
-// Car Type Tamplate Specification
+// Tamplate specification
 template<> struct TypeInfo <Car>: public ClassType<Car> {};
-#endif
