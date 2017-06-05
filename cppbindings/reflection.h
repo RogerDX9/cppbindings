@@ -215,24 +215,20 @@ struct TypeInfo<std::vector<TElem>> : public StdVectorType<std::vector<TElem>>
 //------------------------------------------------------------
 struct IMember
 {
-    IMember(const std::string& inName, const ITypeInfo* inType)
+    IMember(const std::string& inName)
         : m_name(inName)
-        , m_type(inType)
     {}
 
-    const char*         getName() const             { return m_name.c_str(); }
-    const ITypeInfo*    getTypeInfo() const         { return m_type; }
-    EType               getType() const             { return m_type->getType(); }
-    
-    virtual bool        isPointer() const           { return false; }
+    virtual const ITypeInfo*    getTypeInfo() const = 0;
 
-    virtual const void* getValuePtr(const void* instance) const = 0;
-    virtual void        setValuePtr(const void* instance, const void* value) const = 0;
+    const char*                 getName() const             { return m_name.c_str(); }
+    virtual bool                isPointer() const           { return false; }
+
+    virtual const void*         getValuePtr(const void* instance) const = 0;
+    virtual void                setValuePtr(const void* instance, const void* value) const = 0;
 
 protected:
     std::string         m_name;
-private:
-    const ITypeInfo*    m_type;
 };
 
 //------------------------------------------------------------
@@ -244,10 +240,12 @@ protected:
 public:
 
     MemberInfo(const std::string& inName, T U::* pMember)
-        : IMember(inName, &TypeInfo<TType>::btype)
-        , m_pMember(pMember)
+        : IMember   (inName)
+        , m_pMember (pMember)
     {
     }
+
+    virtual const ITypeInfo* getTypeInfo() const { return &TypeInfo<TType>::btype; }
 
     virtual const void* getValuePtr(const void* inClassInstance) const
     {
