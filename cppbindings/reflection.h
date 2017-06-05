@@ -18,7 +18,6 @@ enum EType
 };
 
 //------------------------------------------------------------
-struct IMember;
 struct IClassType;
 struct IArrayType;
 
@@ -32,15 +31,10 @@ struct ITypeInfo
 
     virtual ~ITypeInfo() {}
 
-    virtual EType               getType() const { return ENotImplemented; }
-
-    const char*                 getName() const { return m_name.c_str(); }
-
-    // Class
-    virtual const IClassType*   getClassType() const { return NULL; }
-
-    // Array
-    virtual const IArrayType*   getArrayType() const { return NULL; }
+    virtual EType               getType() const         { return ENotImplemented; }
+    const char*                 getName() const         { return m_name.c_str(); }
+    virtual const IClassType*   getClassType() const    { return NULL; }
+    virtual const IArrayType*   getArrayType() const    { return NULL; }
 
     virtual const void*         getValuePtr(const void* instance) const { assert(false); return instance; }
     virtual void                setValuePtr(const void* instance, const void* value) const { assert(false); }
@@ -102,10 +96,7 @@ struct TypeInfo <bool>: public PrimitiveType<bool>
 {
     TypeInfo(): PrimitiveType<bool>("bool") {}
 
-    virtual EType getType() const
-    {
-        return EBool;
-    }
+    virtual EType getType() const { return EBool; }
 };
 
 //------------------------------------------------------------
@@ -115,10 +106,7 @@ struct TypeInfo <int>: public PrimitiveType<int>
 {
     TypeInfo(): PrimitiveType<int>("int") {}
 
-    virtual EType getType() const
-    {
-        return EInt;
-    }
+    virtual EType getType() const { return EInt; }
 };
 
 //------------------------------------------------------------
@@ -128,10 +116,7 @@ struct TypeInfo <unsigned>: public PrimitiveType<unsigned>
 {
     TypeInfo(): PrimitiveType<unsigned>("unsigned") {}
 
-    virtual EType getType() const
-    {
-        return EUInt;
-    }
+    virtual EType getType() const { return EUInt; }
 };
 
 //------------------------------------------------------------
@@ -141,10 +126,7 @@ struct TypeInfo <float>: public PrimitiveType<float>
 {
     TypeInfo(): PrimitiveType<float>("float") {}
 
-    virtual EType getType() const
-    {
-        return EFloat;
-    }
+    virtual EType getType() const { return EFloat; }
 };
 
 //------------------------------------------------------------
@@ -154,10 +136,7 @@ struct TypeInfo <double>: public PrimitiveType<double>
 {
     TypeInfo(): PrimitiveType<double>("double") {}
 
-    virtual EType getType() const
-    {
-        return EDouble;
-    }
+    virtual EType getType() const { return EDouble; }
 };
 
 //------------------------------------------------------------
