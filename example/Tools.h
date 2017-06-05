@@ -77,18 +77,20 @@ void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsC
     }
     else if (inType->getType() == EArray)
     {
+        const IArrayType* arrayType = inType->getArrayType();
+
         if (inMemberName)
-            printf("%s<%s> %s\n", inType->getName(), inType->getElementType()->getName(), inMemberName);
+            printf("%s<%s> %s\n", arrayType->getName(), arrayType->getElementType()->getName(), inMemberName);
         else
-            printf("%s<%s>\n", inType->getName(), inType->getElementType()->getName());
+            printf("%s<%s>\n", arrayType->getName(), arrayType->getElementType()->getName());
 
         const void* arrayInstance = inInstance;
-        size_t size = inType->getArrayCount(arrayInstance);
+        size_t size = arrayType->getArrayCount(arrayInstance);
 
         for (size_t idx = 0; idx < size; ++idx)
         {
-            const void* valueInstance = inType->getArrayValuePtr(arrayInstance, idx);
-            printHierarchy(inType->getElementType(), valueInstance, inTabsCount + 1, NULL);
+            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
+            printHierarchy(arrayType->getElementType(), valueInstance, inTabsCount + 1, NULL);
         }
     }
     else

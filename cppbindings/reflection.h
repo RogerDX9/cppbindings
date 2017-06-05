@@ -20,13 +20,11 @@ enum EType
 //------------------------------------------------------------
 struct IMember;
 struct IClassType;
+struct IArrayType;
 
 //------------------------------------------------------------
 struct ITypeInfo
 {
-protected:
-    std::string m_name;
-public:
     ITypeInfo(const std::string & inName)
         : m_name(inName)
     {
@@ -42,10 +40,7 @@ public:
     virtual const IClassType*   getClassType() const { return NULL; }
 
     // Array
-    virtual const ITypeInfo*    getElementType() const { return NULL; }
-    virtual const size_t        getArrayCount(const void* instance) const { return 0; }
-    virtual const void*         getArrayValuePtr(const void* instance, int inIndex) const { return NULL; }
-    virtual void                arrayResize(const void* instance, size_t n) const {}
+    virtual const IArrayType*   getArrayType() const { return NULL; }
 
     virtual const void*         getValuePtr(const void* instance) const { assert(false); return instance; }
     virtual void                setValuePtr(const void* instance, const void* value) const { assert(false); }
@@ -63,6 +58,8 @@ public:
         const T* val = (T*)getValuePtr(instance);
         return *val;
     }
+protected:
+    std::string m_name;
 };
 
 //------------------------------------------------------------
@@ -164,14 +161,38 @@ struct TypeInfo <double>: public PrimitiveType<double>
 };
 
 //------------------------------------------------------------
+// base for containers
+struct IArrayType : public ITypeInfo
+{
+    IArrayType(const std::string & inName)
+        : ITypeInfo(inName)
+    {
+    }
+
+    virtual EType               getType() const { return EArray; }
+
+    virtual const ITypeInfo*    getElementType() const = 0;
+    virtual const size_t        getArrayCount(const void* instance) const = 0;
+    virtual const void*         getArrayValuePtr(const void* instance, int inIndex) const = 0;
+    virtual void                arrayResize(const void* instance, size_t n) const = 0;
+};
+
+//------------------------------------------------------------
 template<typename TContainer>
-struct StdVectorType : public ITypeInfo
+struct StdVectorType : public IArrayType
 {
     static TypeInfo<TContainer> btype;
 
     StdVectorType(const std::string & inName)
-        : ITypeInfo(inName)
+        : IArrayType(inName)
     {
+    }
+
+    virtual const IArrayType* getArrayType() const { return &btype; }
+
+    virtual const ITypeInfo* getElementType() const
+    {
+        return &TypeInfo<TContainer::value_type>::btype;
     }
 
     virtual const size_t getArrayCount(const void* instance) const
@@ -186,24 +207,16 @@ struct StdVectorType : public ITypeInfo
         const void* value = &array->at(inIndex);
         return value;
     }
+
     virtual void arrayResize(const void* instance, size_t n) const
     {
         TContainer* array = (TContainer*)instance;
         array->resize(n);
     }
-
-    virtual EType getType() const
-    {
-        return EArray;
-    }
-
-    virtual const ITypeInfo* getElementType() const
-    {
-        return &TypeInfo<TContainer::value_type>::btype;
-    }
 };
 
 //------------------------------------------------------------
+// template specialization for std::vector
 template<typename TElem>
 struct TypeInfo<std::vector<TElem>> : public StdVectorType<std::vector<TElem>>
 {
@@ -235,10 +248,6 @@ protected:
 template<typename T, class U, typename TType>
 struct MemberInfo: public IMember
 {
-protected:
-    T U::* m_pMember;
-public:
-
     MemberInfo(const std::string& inName, T U::* pMember)
         : IMember   (inName)
         , m_pMember (pMember)
@@ -260,6 +269,9 @@ public:
         
         iPtr->*m_pMember = *vPtr;
     }
+
+protected:
+    T U::* m_pMember;
 };
 
 //------------------------------------------------------------
@@ -290,10 +302,6 @@ struct MemberInfoPtr: public MemberInfo<T, U, TType>
 // base for all class template specializations
 struct IClassType: public ITypeInfo
 {
-private:
-    std::vector<IMember*> m_members;
-
-public:
     IClassType(const std::string & inName)
         : ITypeInfo(inName)
     {
@@ -329,6 +337,8 @@ public:
         m_members.push_back(vb);
         return vb;
     }
+private:
+    std::vector<IMember*> m_members;
 };
 
 //------------------------------------------------------------

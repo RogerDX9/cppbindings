@@ -48,15 +48,16 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson:
     }
     else if (inType->getType() == EArray)
     {
-        const void* arrayInstance = inInstance;
+        const void*         arrayInstance = inInstance;
+        const IArrayType*   arrayType = inType->getArrayType();
 
         size_t size = inValue.Size();
-        inType->arrayResize(arrayInstance, size);
+        arrayType->arrayResize(arrayInstance, size);
         for (size_t idx = 0; idx < size; ++idx)
         {
             rapidjson::Value& v = inValue[idx];
-            const void* valueInstance = inType->getArrayValuePtr(arrayInstance, idx);
-            deserializeJSON(inType->getElementType(), valueInstance, v); 
+            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
+            deserializeJSON(arrayType->getElementType(), valueInstance, v);
         }
     }
 }

@@ -60,12 +60,15 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson::W
     else if (inType->getType() == EArray)
     {
         inWriter.StartArray();
-        const void* arrayInstance = inType->getValuePtr(inInstance);
-        size_t size = inType->getArrayCount(arrayInstance);
+
+        const void*         arrayInstance = inInstance;
+        const IArrayType*   arrayType = inType->getArrayType();
+
+        size_t size = arrayType->getArrayCount(arrayInstance);
         for (size_t idx = 0; idx < size; ++idx)
         {
-            const void* valueInstance = inType->getArrayValuePtr(arrayInstance, idx);
-            serializeJSON(inType->getElementType(), valueInstance, inWriter); 
+            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
+            serializeJSON(arrayType->getElementType(), valueInstance, inWriter);
         }
         inWriter.EndArray();
     }
