@@ -36,20 +36,23 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson::W
         if (instance != NULL)
         {
             inWriter.StartObject();
+
+            const void*                     classInstance = inInstance;
             const IClassType*               classType = inType->getClassType();
             const std::vector<IMember*>*    members = classType->getMembers();
 
             for (std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it)
             {
                 const IMember*      m = (*it);
-                const void*         instance = m->getValuePtr(inInstance);
+                const void*         memberPtr  = m->getPtr(classInstance);
                 const char*         memberName = m->getName();
                 const ITypeInfo*    memberType = m->getTypeInfo();
 
                 inWriter.String(memberName);
 
-                serializeJSON(memberType, instance, inWriter);
+                serializeJSON(memberType, memberPtr, inWriter);
             }
+
             inWriter.EndObject();
         }
         else
@@ -64,17 +67,17 @@ void serializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson::W
         const void*         arrayInstance = inInstance;
         const IArrayType*   arrayType = inType->getArrayType();
 
-        size_t size = arrayType->getArrayCount(arrayInstance);
+        size_t size = arrayType->getCount(arrayInstance);
         for (size_t idx = 0; idx < size; ++idx)
         {
-            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
+            const void* valueInstance = arrayType->getValuePtr(arrayInstance, idx);
             serializeJSON(arrayType->getElementType(), valueInstance, inWriter);
         }
         inWriter.EndArray();
     }
     else
     {
-        assert(true);
+        assert(false);
     }
 }
 

@@ -30,34 +30,35 @@ void deserializeJSON(const ITypeInfo* inType, const void* inInstance, rapidjson:
     }
     else if (inType->getType() == EClass)
     {
+        const void*                     classInstance = inInstance;
         const IClassType*               classType = inType->getClassType();
         const std::vector<IMember*>*    members   = classType->getMembers();
+
         for ( std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it )
         {
             const IMember*      m =             (*it);
-            const void*         instance =      m->getValuePtr(inInstance);
+            const void*         memberPtr  =    m->getPtr(classInstance);
             const char*         memberName =    m->getName();
             const ITypeInfo*    memberType =    m->getTypeInfo();
 
             if (inValue.HasMember(memberName) && !m->isPointer())
             {
-                rapidjson::Value& v = inValue[memberName];
-                deserializeJSON(m->getTypeInfo(), instance, v);
+                deserializeJSON(m->getTypeInfo(), memberPtr, inValue[memberName]);
             }
         }
     }
     else if (inType->getType() == EArray)
     {
-        const void*         arrayInstance = inInstance;
-        const IArrayType*   arrayType = inType->getArrayType();
+        const void*         arrayInstance   = inInstance;
+        const IArrayType*   arrayType       = inType->getArrayType();
+        size_t              size            = inValue.Size();
+        
+        arrayType->resize(arrayInstance, size);
 
-        size_t size = inValue.Size();
-        arrayType->arrayResize(arrayInstance, size);
         for (size_t idx = 0; idx < size; ++idx)
         {
-            rapidjson::Value& v = inValue[idx];
-            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
-            deserializeJSON(arrayType->getElementType(), valueInstance, v);
+            const void* valuePtr = arrayType->getValuePtr(arrayInstance, idx);
+            deserializeJSON(arrayType->getElementType(), valuePtr, inValue[idx]);
         }
     }
 }
@@ -94,7 +95,7 @@ int main()
 
     deserializeJSON(car, document);
 
-    printHierarchy(car);
+    printBindings(car);
 
     return 0;
 }

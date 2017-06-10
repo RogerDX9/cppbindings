@@ -16,5 +16,5 @@ struct Wheel
     }
 };
 
-// Tamplate specification
+// template specification
 template<> struct TypeInfo <Wheel>: public ClassType<Wheel> {};

@@ -57,7 +57,6 @@ protected:
 };
 
 //------------------------------------------------------------
-// main tamplate
 template<typename T>
 struct TypeInfo : public ITypeInfo
 {
@@ -151,9 +150,9 @@ struct IArrayType : public ITypeInfo
     virtual EType               getType() const { return EArray; }
 
     virtual const ITypeInfo*    getElementType() const = 0;
-    virtual const size_t        getArrayCount(const void* instance) const = 0;
-    virtual const void*         getArrayValuePtr(const void* instance, int inIndex) const = 0;
-    virtual void                arrayResize(const void* instance, size_t n) const = 0;
+    virtual const size_t        getCount(const void* instance) const = 0;
+    virtual const void*         getValuePtr(const void* instance, int inIndex) const = 0;
+    virtual void                resize(const void* instance, size_t n) const = 0;
 };
 
 //------------------------------------------------------------
@@ -174,20 +173,20 @@ struct StdVectorType : public IArrayType
         return &TypeInfo<TContainer::value_type>::btype;
     }
 
-    virtual const size_t getArrayCount(const void* instance) const
+    virtual const size_t getCount(const void* instance) const
     {
         const TContainer* array = (const TContainer*)instance;
         return array->size();
     }
 
-    virtual const void* getArrayValuePtr(const void* instance, int inIndex) const
+    virtual const void* getValuePtr(const void* instance, int inIndex) const
     {
         const TContainer* array = (const TContainer*)instance;
         const void* value = &array->at(inIndex);
         return value;
     }
 
-    virtual void arrayResize(const void* instance, size_t n) const
+    virtual void resize(const void* instance, size_t n) const
     {
         TContainer* array = (TContainer*)instance;
         array->resize(n);
@@ -216,8 +215,7 @@ struct IMember
     const char*                 getName() const             { return m_name.c_str(); }
     virtual bool                isPointer() const           { return false; }
 
-    virtual const void*         getValuePtr(const void* instance) const = 0;
-    virtual void                setValuePtr(const void* instance, const void* value) const = 0;
+    virtual const void*         getPtr(const void* instance) const = 0;
 
 protected:
     std::string         m_name;
@@ -235,7 +233,7 @@ struct MemberInfo: public IMember
 
     virtual const ITypeInfo* getTypeInfo() const { return &TypeInfo<TType>::btype; }
 
-    virtual const void* getValuePtr(const void* inClassInstance) const
+    virtual const void* getPtr(const void* inClassInstance) const
     {
         U * iPtr = (U*)inClassInstance;
         return &(iPtr->*m_pMember);
@@ -244,8 +242,7 @@ struct MemberInfo: public IMember
     virtual void setValuePtr(const void* inClassInstance, const void* value) const
     {
         U * iPtr = (U*)inClassInstance;
-        T * vPtr = (T*)value;
-        
+        T * vPtr = (T*)value;
         iPtr->*m_pMember = *vPtr;
     }
 
@@ -264,16 +261,18 @@ struct MemberInfoPtr: public MemberInfo<T, U, TType>
 
     virtual bool isPointer() const { return true; }
 
-    virtual const void* getValuePtr(const void* inClassInstance) const
+    virtual const void* getPtr(const void* inClassInstance) const
     {
-        U * iPtr = (U*) inClassInstance;
+        U * iPtr = (U*)inClassInstance;
         T U::* mPtr = this->m_pMember;
         return iPtr->*mPtr;
     }
 
     virtual void setValuePtr(const void* inClassInstance, const void* value) const
     {
-        assert(false);
+        U * iPtr = (U*)inClassInstance;
+        T * vPtr = (T*)value;
+        iPtr->*m_pMember = *vPtr;
     }
 };
 

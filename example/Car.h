@@ -28,5 +28,5 @@ struct Car
     }
 };
 
-// Tamplate specification
+// template specification
 template<> struct TypeInfo <Car>: public ClassType<Car> {};

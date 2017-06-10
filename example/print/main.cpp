@@ -25,7 +25,7 @@ int main()
     car.m_wheel.m_screws.push_back(4);
     car.m_wheels.push_back(car.m_wheel);
 
-    printHierarchy(car);
+    printBindings(car);
 
     return 0;
 }

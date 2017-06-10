@@ -3,7 +3,7 @@
 #include "..\cppbindings\reflection.h"
 #include <cstdio>
 
-void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsCount, const char * inMemberName/* = NULL*/)
+void printBindings(const ITypeInfo* inType, const void* inInstance, int inTabsCount, const char * inMemberName/* = NULL*/)
 {
     for (int idx = 0; idx < inTabsCount; ++idx)
         printf("    ");
@@ -42,55 +42,54 @@ void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsC
     }
     else if (inType->getType() == EClass) // if it's a Class
     {
-        const IClassType* classType = inType->getClassType();
-        const void* instance = inInstance;
+        if (inMemberName)
+            printf("%s %s\n", inType->getName(), inMemberName);
+        else
+            printf("class %s\n", inType->getName());
 
+        const void*                     classInstance = inInstance;
+        const IClassType*               classType = inType->getClassType();
+        const std::vector<IMember*>*    members = classType->getMembers();
+        for (std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it)
         {
-            if (inMemberName)
-                printf("%s %s\n", inType->getName(), inMemberName);
-            else
-                printf("class %s\n", inType->getName());
+            const IMember*      m = (*it);
+            const void*         memberPtr  = m->getPtr(classInstance);
+            const char*         memberName = m->getName();
+            const ITypeInfo*    memberType = m->getTypeInfo();
 
-            const std::vector<IMember*>* members = classType->getMembers();
-            for (std::vector<IMember*>::const_iterator it = members->begin(); it != members->end(); ++it)
+            if (!m->isPointer())
             {
-                const IMember*      m = (*it);
-                const void*         instance = m->getValuePtr(inInstance);
+                printBindings(memberType, memberPtr, inTabsCount + 1, memberName);
+            }
+            else
+            {
+                for (int idx = 0; idx < inTabsCount + 1; ++idx)
+                    printf("    ");
 
-                if (!m->isPointer())
-                {
-                    printHierarchy(m->getTypeInfo(), instance, inTabsCount + 1, m->getName());
-                }
-                else
-                {
-                    for (int idx = 0; idx < inTabsCount + 1; ++idx)
-                        printf("    ");
+                printf("%s %s %p", memberType->getName(), memberName, memberPtr);
+                printf("\n");
 
-                    printf("%s %s %p", m->getTypeInfo()->getName(), m->getName(), instance);
-                    printf("\n");
-
-                    for (int idx = 0; idx < inTabsCount; ++idx)
-                        printf("    ");
-                }
+                for (int idx = 0; idx < inTabsCount; ++idx)
+                    printf("    ");
             }
         }
     }
     else if (inType->getType() == EArray)
     {
-        const IArrayType* arrayType = inType->getArrayType();
+        const void*         arrayInstance   = inInstance;
+        const IArrayType*   arrayType       = inType->getArrayType();
+        const ITypeInfo*    elementType     = arrayType->getElementType();
+        size_t              size            = arrayType->getCount(arrayInstance);
 
         if (inMemberName)
-            printf("%s<%s> %s\n", arrayType->getName(), arrayType->getElementType()->getName(), inMemberName);
+            printf("%s<%s> %s\n", arrayType->getName(), elementType->getName(), inMemberName);
         else
-            printf("%s<%s>\n", arrayType->getName(), arrayType->getElementType()->getName());
-
-        const void* arrayInstance = inInstance;
-        size_t size = arrayType->getArrayCount(arrayInstance);
+            printf("%s<%s>\n", arrayType->getName(), elementType->getName());
 
         for (size_t idx = 0; idx < size; ++idx)
         {
-            const void* valueInstance = arrayType->getArrayValuePtr(arrayInstance, idx);
-            printHierarchy(arrayType->getElementType(), valueInstance, inTabsCount + 1, NULL);
+            const void* valueInstance = arrayType->getValuePtr(arrayInstance, idx);
+            printBindings(elementType, valueInstance, inTabsCount + 1, NULL);
         }
     }
     else
@@ -101,7 +100,7 @@ void printHierarchy(const ITypeInfo* inType, const void* inInstance, int inTabsC
 }
 
 template<class T>
-void printHierarchy(T& inObject)
+void printBindings(T& inObject)
 {
-    printHierarchy(&TypeInfo<T>::btype, &inObject, 0, NULL);
+    printBindings(&TypeInfo<T>::btype, &inObject, 0, NULL);
 }
