@@ -242,7 +242,8 @@ struct MemberInfo: public IMember
     virtual void setValuePtr(const void* inClassInstance, const void* value) const
     {
         U * iPtr = (U*)inClassInstance;
-        T * vPtr = (T*)value;
+        T * vPtr = (T*)value;
+        
         iPtr->*m_pMember = *vPtr;
     }
 
