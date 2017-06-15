@@ -328,7 +328,7 @@ struct ClassType: public IClassType
 
     ClassType() : IClassType("")
     {
-        T::tieReflection(this, m_name);
+        T::tieMembers(this, m_name);
     }
 
     virtual const IClassType* getClassType() const { return &btype; }

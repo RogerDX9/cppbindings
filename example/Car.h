@@ -14,15 +14,15 @@ struct Car
     Wheel               m_wheel;
     std::vector<Wheel>  m_wheels;
 
-    static void tieReflection(IClassType * inReflection, std::string & outName)
+    static void tieMembers(IClassType * classType, std::string & outName)
     {
-        inReflection->tie("m_automaticTransmission",   &Car::m_automaticTransmission);
-        inReflection->tie("m_speed",                   &Car::m_speed);
-        inReflection->tie("m_id",                      &Car::m_id);
-        inReflection->tie("m_mass",                    &Car::m_mass);
-        inReflection->tie("m_wheelPtr",                &Car::m_wheelPtr);
-        inReflection->tie("m_wheel",                   &Car::m_wheel);
-        inReflection->tie("m_wheels",                  &Car::m_wheels);
+        classType->tie("m_automaticTransmission",   &Car::m_automaticTransmission);
+        classType->tie("m_speed",                   &Car::m_speed);
+        classType->tie("m_id",                      &Car::m_id);
+        classType->tie("m_mass",                    &Car::m_mass);
+        classType->tie("m_wheelPtr",                &Car::m_wheelPtr);
+        classType->tie("m_wheel",                   &Car::m_wheel);
+        classType->tie("m_wheels",                  &Car::m_wheels);
 
         outName = "Car";
     }
