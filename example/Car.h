@@ -14,17 +14,17 @@ struct Car
     Wheel               m_wheel;
     std::vector<Wheel>  m_wheels;
 
-    static std::string bindReflection(IClassType * inReflection)
+    static void tieReflection(IClassType * inReflection, std::string & outName)
     {
-        inReflection->bind("m_automaticTransmission",   &Car::m_automaticTransmission);
-        inReflection->bind("m_speed",                   &Car::m_speed);
-        inReflection->bind("m_id",                      &Car::m_id);
-        inReflection->bind("m_mass",                    &Car::m_mass);
-        inReflection->bind("m_wheelPtr",                &Car::m_wheelPtr);
-        inReflection->bind("m_wheel",                   &Car::m_wheel);
-        inReflection->bind("m_wheels",                  &Car::m_wheels);
+        inReflection->tie("m_automaticTransmission",   &Car::m_automaticTransmission);
+        inReflection->tie("m_speed",                   &Car::m_speed);
+        inReflection->tie("m_id",                      &Car::m_id);
+        inReflection->tie("m_mass",                    &Car::m_mass);
+        inReflection->tie("m_wheelPtr",                &Car::m_wheelPtr);
+        inReflection->tie("m_wheel",                   &Car::m_wheel);
+        inReflection->tie("m_wheels",                  &Car::m_wheels);
 
-        return "Car";
+        outName = "Car";
     }
 };
 

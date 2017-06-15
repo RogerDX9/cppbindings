@@ -7,12 +7,12 @@ struct Wheel
     int                 m_rotation;
     std::vector<int>    m_screws;
 
-    static std::string bindReflection(ClassType<Wheel> * inReflection)
+    static void tieReflection(ClassType<Wheel> * inReflection, std::string outName)
     {
-        inReflection->bind("m_rotation",    &Wheel::m_rotation);
-        inReflection->bind("m_screws",      &Wheel::m_screws);
+        inReflection->tie("m_rotation",    &Wheel::m_rotation);
+        inReflection->tie("m_screws",      &Wheel::m_screws);
 
-        return "Wheel";
+        outName = "Wheel";
     }
 };
 

@@ -302,7 +302,7 @@ struct IClassType: public ITypeInfo
     virtual const std::vector<IMember*>* getMembers() const { return &m_members; }
 
     template<typename T, class U>
-    MemberInfo<T, U, T>* bind(const std::string & inName, T U::* inValue)
+    MemberInfo<T, U, T>* tie(const std::string & inName, T U::* inValue)
     {
         MemberInfo<T, U, T>* vb = new MemberInfo<T, U, T>(inName, inValue);
         m_members.push_back(vb);
@@ -310,7 +310,7 @@ struct IClassType: public ITypeInfo
     }
 
     template<typename T, class U>
-    MemberInfo<T*, U, T>* bind(const std::string & inName, T* U::* inValue)
+    MemberInfo<T*, U, T>* tie(const std::string & inName, T* U::* inValue)
     {
         MemberInfo<T*, U, T>* vb = new MemberInfoPtr<T*, U, T>(inName, inValue);
         m_members.push_back(vb);
@@ -328,7 +328,7 @@ struct ClassType: public IClassType
 
     ClassType() : IClassType("")
     {
-        m_name = T::bindReflection(this);
+        T::tieReflection(this, m_name);
     }
 
     virtual const IClassType* getClassType() const { return &btype; }
