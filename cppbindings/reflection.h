@@ -36,7 +36,7 @@ struct ITypeInfo
     virtual const IClassType*   getClassType() const    { return NULL; }
     virtual const IArrayType*   getArrayType() const    { return NULL; }
 
-    virtual const void*         getValuePtr(const void* instance) const { assert(false); return instance; }
+    virtual const void*         getValuePtr(const void* instance) const { return instance; }
     virtual void                setValuePtr(const void* instance, const void* value) const { assert(false); }
 
     template<typename T>
