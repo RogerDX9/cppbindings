@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\cppbindings\reflection.h"
+#include "..\cppbindings\Reflection.h"
 #include <cstdio>
 
 void printBindings(const CBind::ITypeInfo* inType, const void* inInstance, int inTabsCount, const char * inMemberName/* = NULL*/)
