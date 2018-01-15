@@ -14,7 +14,7 @@ struct Car
     Wheel               m_wheel;
     std::vector<Wheel>  m_wheels;
 
-    static void tieMembers(IClassType * classType, std::string & outName)
+    static void tieMembers(CBind::IClassType * classType, std::string & outName)
     {
         classType->tie("m_automaticTransmission",   &Car::m_automaticTransmission);
         classType->tie("m_speed",                   &Car::m_speed);
@@ -28,5 +28,8 @@ struct Car
     }
 };
 
-// template specification
-template<> struct TypeInfo <Car>: public ClassType<Car> {};
+namespace CBind
+{
+    // template specification
+    template<> struct TypeInfo <Car> : public ClassType<Car> {};
+}

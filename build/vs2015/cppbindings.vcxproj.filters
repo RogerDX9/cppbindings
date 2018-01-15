@@ -9,14 +9,11 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Header Files\CBind">
+      <UniqueIdentifier>{653a466b-ee41-416e-87f4-d31c330941c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -29,21 +26,30 @@
     <ClInclude Include="..\..\example\Tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\cppbindings\reflection.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\cppbindings\ArrayType.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\ClassType.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\MemberInfo.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\PrimitiveType.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\Reflection.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\StdVectorType.h">
+      <Filter>Header Files\CBind</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cppbindings\TypeInfo.h">
+      <Filter>Header Files\CBind</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\example\deserialize\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\example\print\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\example\serialize\main.cpp">
+    <ClCompile Include="..\..\example\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
