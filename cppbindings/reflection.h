@@ -60,7 +60,7 @@ protected:
 template<typename T>
 struct TypeInfo : public ITypeInfo
 {
-    //static TypeInfo<T> btype;
+    static TypeInfo<T> btype;
 };
 
 //------------------------------------------------------------
@@ -170,7 +170,7 @@ struct StdVectorType : public IArrayType
 
     virtual const ITypeInfo* getElementType() const
     {
-        return &TypeInfo<TContainer::value_type>::btype;
+        return &TypeInfo<typename TContainer::value_type>::btype;
     }
 
     virtual const size_t getCount(const void* instance) const
@@ -271,9 +271,10 @@ struct MemberInfoPtr: public MemberInfo<T, U, TType>
 
     virtual void setValuePtr(const void* inClassInstance, const void* value) const
     {
-        U * iPtr = (U*)inClassInstance;
+        assert(false);
+        /*U * iPtr = (U*)inClassInstance;
         T * vPtr = (T*)value;
-        iPtr->*m_pMember = *vPtr;
+        iPtr->*m_pMember = *vPtr;*/
     }
 };
 
