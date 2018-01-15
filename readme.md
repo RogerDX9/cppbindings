@@ -27,8 +27,8 @@ namespace CBind
 }
 ```
 
-* [Defined types are described here] (https://github.com/spoiltos/cppbindings/blob/master/cppbindings/Reflection.h)
-* [Example of usage] (https://github.com/spoiltos/cppbindings/blob/master/example/main.cpp)
+* [Defined types are described here](https://github.com/spoiltos/cppbindings/blob/master/cppbindings/Reflection.h)
+* [Example of usage](https://github.com/spoiltos/cppbindings/blob/master/example/main.cpp)
      
 ## Compiled under:
 * visual studio 2015 - build/vs2015/cppbindings.sln
