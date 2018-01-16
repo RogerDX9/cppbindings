@@ -6,13 +6,13 @@ Template based reflection for C++
 
 A function with all members described and template specification are required per class:
 
-```
+```C++
 struct Wheel
 {
     int                 m_rotation;
     std::vector<int>    m_screws;
 
-    static void tieMembers(CBind::IClassType * classType, std::string outName) // a function
+    static void tieMembers(CBind::IClassType * classType, std::string & outName) // a function
     {
         classType->tie("m_rotation",    &Wheel::m_rotation);
         classType->tie("m_screws",      &Wheel::m_screws);
@@ -27,8 +27,8 @@ namespace CBind
 }
 ```
 
-* [Defined types are described here](https://github.com/spoiltos/cppbindings/blob/master/cppbindings/Reflection.h)
-* [Example of usage](https://github.com/spoiltos/cppbindings/blob/master/example/main.cpp)
+* [Defined types are here](https://github.com/spoiltos/cppbindings/blob/master/cppbindings/Reflection.h)
+* [Example of use](https://github.com/spoiltos/cppbindings/blob/master/example/main.cpp)
      
 ## Compiled under:
 * visual studio 2015 - build/vs2015/cppbindings.sln
